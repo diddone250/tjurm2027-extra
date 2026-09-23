@@ -29,26 +29,59 @@
 using namespace std;
 
 // ==================== 在此处编写 Enemy和Target 类 ====================
-
-
+class Enemy{
+private:
+    char id;
+    double x;
+    double y;
+public:
+    void jilu(char id_1,double x1,double y1){
+        id=id_1;
+        x=x1;
+        y=y1;
+    }
+    void check_dis(double *dis , char *t){
+        if(*dis>x*x+y*y){
+            *t = id;
+            *dis = x*x+y*y;
+        }
+    }
+};
+//其实不知道什么要放到private里面，但是感觉如果全public那就没意义了？（不知）
+class Target{
+public:
+    char check_t(Enemy e1,double &mini){
+        char t;
+        e1.check_dis(&mini,&t);
+        return t;
+    }
+    
+};
 
 // ====================================================================
 
 
 int main() {
     Target target;
+    Enemy enemy[4];
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {//直接保证只有四个数据还是太仁慈了
         double x, y;
         char id;
         cout << "请输入第 " << i + 1 << " 个目标的兵种ID和坐标(x y): ";
         cin >> id >> x >> y;
-
+        enemy[i].jilu(id,x,y);
         //在此处调用你的Enemy的设置函数，传入id,x,y
         
     }
 
     // 调用查找并输出最佳目标
-
+    char ans='\0';
+    double mini=1e9;
+    int n=4;
+    for(int i=0;i<n;i++){
+        ans=target.check_t(enemy[i],mini);
+    }
+    cout<<"answer: "<<ans<<'\n';
     return 0;
 }
