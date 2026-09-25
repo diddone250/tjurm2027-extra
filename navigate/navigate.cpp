@@ -4,6 +4,7 @@
 #include <cstring> 
 #include <queue>
 #include <utility>
+#include<array>
 
 /*
  	现在你有一个类MAP_BASE，请编写他的子类，继承于MAP_BASE
@@ -132,6 +133,8 @@ void bfs(){
 		}
 	}
 }
+
+
 void bfs_sup(){
 	int dx[8]={-1,1,0,0,-1,-1,1,1};
 	int dy[8]={0,0,-1,1,-1,1,-1,1};
@@ -155,7 +158,7 @@ void bfs_sup(){
 			if(vis[nx][ny] != -1) continue;
 			if(tu[nx][ny]=='#') continue;
 			bool flag=1;
-			for(int i=0;i<8;i++){
+			for(int i=0;i<8;i++){//与bfs不同的只有这一段，也就是判断八方向
 				if(nx+dx[i] < 0 || nx+dx[i] >= n || ny+dy[i] < 0 || ny+dy[i] >= m) {
     				flag=false;
 					break;
@@ -192,10 +195,97 @@ void bfs_sup(){
 
 }
 void bfs_sup_turnmin(){
+	int dx[8]={-1,1,0,0,-1,-1,1,1};
+	int dy[8]={0,0,-1,1,-1,1,-1,1};
 	
+	MAP_BASE map1;
+	std::vector<std::string> tu=map1.print_map();
+
+	int x0=2,y0=2;
+	int n=tu.size();
+	int m=tu[0].size();
+	int xt=n-3,yt=m-3;
+
+	std::vector<std::vector<std::array<int,4>>> dist(n,std::vector<std::array<int,4>>(m));
+	std::vector<std::vector<std::array<std::array<int,3>,4>>> pre(n,std::vector<std::array<std::array<int,3>,4>>(m));
+	std::deque<std::array<int,3>> dq;
+	for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            dist[i][j].fill(1e9);
+	// [&]指代要引用的变量 ->表示输出形式为bool 感觉其实和函数挺像的
+	auto valid = [&](int x, int y) -> bool {//这个是lambda,可以在函数内部出现的函数
+        for (int i = 0; i < 8; i++) {
+            int nx = x + dx[i], ny = y + dy[i];
+			if (tu[x][y] == '#') return false;
+            if (nx < 0 || nx >= n || ny < 0 || ny >= m) return false;
+            if (tu[nx][ny] == '#') return false;
+        }
+        return true;
+    };
+
+	//first step
+	for(int d=0;d<4;d++){
+		int nx=x0+dx[d];
+		int ny=y0+dy[d];
+		if(nx<0 || nx>=n || ny<0 || ny>=m) continue;
+		if(!valid(nx,ny)) continue;
+		pre[nx][ny][d]={x0,y0,-1};//用-1表示没有前置节点
+		dist[nx][ny][d]=0;
+		dq.push_front({nx,ny,d});
+	}
+	//start running
+	while(!dq.empty()){//正常bfs,但是要有方向
+		auto cur=dq.front();
+		dq.pop_front();
+		int x=cur[0],y=cur[1],d=cur[2];
+		int curd=dist[x][y][d];
+		for(int d2=0;d2<4;d2++){
+			int nx=x+dx[d2],ny=y+dy[d2];
+			if (nx < 0 || nx >= n || ny < 0 || ny >= m) continue;
+            if (!valid(nx, ny)) continue;
+			int cost= (d == d2)? 0:1;
+			if(dist[nx][ny][d2]>(cost+curd)){//判断方向，用权重表示：0表示不转，1表示转
+				dist[nx][ny][d2]=(cost+curd);
+				pre[nx][ny][d2]={x,y,d};
+				if(cost == 0) dq.push_front({nx,ny,d2});
+				else dq.push_back({nx,ny,d2});
+			}
+		}
+	}
+
+
+	int mini=1e9,minid;
+	for(int d=0;d<4;d++){
+		if(mini>dist[xt][yt][d]){
+			mini=dist[xt][yt][d];
+			minid=d;
+		}
+	}
+	if(mini == 1e9)  std::cout<<"无以抵达"<<'\n';
+	
+	else{
+		int curx=xt,cury=yt;
+		int curd = minid;
+		do{
+            tu[curx][cury]='@';
+			for(int i=0;i<8;i++){
+				tu[curx+dx[i]][cury+dy[i]]='@' ;
+			}
+			auto p=pre[curx][cury][curd];//一定要先提取旧的值，然后再更新，不然会出现curx先更新后再更新cury导致错误
+            curx = p[0];
+			cury = p[1];
+			curd = p[2];
+        }while(!(curx==x0 &&cury == y0));//少一个最初的判断，直接暴力加上了
+		for(int i=0;i<8;i++){
+			tu[x0+dx[i]][y0+dy[i]]='@' ;
+		}
+		for(int i=0;i<n;i++){
+			std::cout<<tu[i]<<'\n';
+		}
+	}
 }
 int main(){
-	bfs_sup();
+	bfs_sup_turnmin();
 	return 0;
 
 }
