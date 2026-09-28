@@ -64,13 +64,6 @@ class MAP_BASE
 			};
 			std::memset(visit, false, sizeof(visit));
 		}
-		std::vector<std::string> print_map(){
-			return map_in;
-		}
-		bool vis(){
-			return visit;
-		}
-		
 		void print(std::vector<std::string> map_in)
 		{
 			for (const auto& line : map_in)
@@ -95,51 +88,52 @@ class MAP_BASE
 
 //IMPLEMENT YOUR CODE HERE
 
-void bfs(){
-	int dx[4]={-1,1,0,0};
-	int dy[4]={0,0,-1,1};
-	MAP_BASE map1;
-	std::vector<std::string> tu=map1.print_map();
-	int x0=1,y0=1;
-	int n=tu.size();
-	int m=tu[0].size();
-	int xt=n-2,yt=m-2;
-	std::vector<std::vector<int>> vis(n,std::vector<int>(m,-1));
-	std::vector<std::vector<std::pair<int,int>>> pre(n,std::vector<std::pair<int,int>>(m,{-1,-1}));
-	std::queue<std::pair<int,int>> q;
-	q.push({1,1});
-	while(!q.empty()){
-		int x=q.front().first,y=q.front().second;
-		q.pop();
-		for(int d=0;d<4;d++){
-			int nx=x+dx[d];
-			int ny=y+dy[d];
-			if(nx<0 || nx>=n || ny<0 || ny>=m) continue;
-			if(vis[nx][ny] != -1) continue;
-			if(tu[nx][ny]=='#') continue;
-			pre[nx][ny]={x,y};
-			vis[nx][ny]=0;
-			q.push({nx,ny});
+
+class BFS : public MAP_BASE{
+public:
+	void bfs(){
+		int dx[4]={-1,1,0,0};
+		int dy[4]={0,0,-1,1};
+		int x0=1,y0=1;
+		int n=map_in.size();
+		int m=map_in[0].size();
+		int xt=n-2,yt=m-2;
+		std::vector<std::vector<int>> vis(n,std::vector<int>(m,-1));
+		std::vector<std::vector<std::pair<int,int>>> pre(n,std::vector<std::pair<int,int>>(m,{-1,-1}));
+		std::queue<std::pair<int,int>> q;
+		q.push({1,1});
+		while(!q.empty()){
+			int x=q.front().first,y=q.front().second;
+			q.pop();
+			for(int d=0;d<4;d++){
+				int nx=x+dx[d];
+				int ny=y+dy[d];
+				if(nx<0 || nx>=n || ny<0 || ny>=m) continue;
+				if(vis[nx][ny] != -1) continue;
+				if(map_in[nx][ny]=='#') continue;
+				pre[nx][ny]={x,y};
+				vis[nx][ny]=0;
+				q.push({nx,ny});
+			}
+		}
+		if(vis[xt][yt] == -1) std::cout<<"无以抵达"<<'\n';
+		else{
+			for(auto pl=std::make_pair(xt,yt);pl != std::make_pair(x0,y0);pl=pre[pl.first][pl.second]){
+				map_in[pl.first][pl.second]='C';
+			}
+			map_in[x0][y0]='C';
+			print(map_in);
 		}
 	}
-	if(vis[xt][yt] == -1) std::cout<<"无以抵达"<<'\n';
-	else{
-		for(auto pl=std::make_pair(xt,yt);pl != std::make_pair(x0,y0);pl=pre[pl.first][pl.second]){
-			tu[pl.first][pl.second]='@';
-		}
-		tu[x0][y0]='@';
-		for(int i=0;i<n;i++){
-			std::cout<<tu[i]<<'\n';
-		}
-	}
-}
+};
 
 
+class BFS_SUP : public MAP_BASE{
+public:
 void bfs_sup(){
 	int dx[8]={-1,1,0,0,-1,-1,1,1};
 	int dy[8]={0,0,-1,1,-1,1,-1,1};
-	MAP_BASE map1;
-	std::vector<std::string> tu=map1.print_map();
+	std::vector<std::string> tu=map_in;
 	int x0=2,y0=2;
 	int n=tu.size();
 	int m=tu[0].size();
@@ -179,33 +173,28 @@ void bfs_sup(){
 		
 		auto pl=std::make_pair(xt,yt);
 		do{
-            tu[pl.first][pl.second]='@';
-			for(int i=0;i<8;i++){
-				tu[pl.first+dx[i]][pl.second+dy[i]]='@' ;
-			}
+            tu[pl.first][pl.second]='C';
             pl=pre[pl.first][pl.second];
         }while(pl != std::make_pair(x0,y0));
-		for(int i=0;i<8;i++){
-			tu[x0+dx[i]][y0+dy[i]]='@' ;
-		}
-		for(int i=0;i<n;i++){
-			std::cout<<tu[i]<<'\n';
-		}
+		tu[2][2]='C';
+		print(tu);
 	}
-
 }
+};
+
+
+class BFS_SUP_TURNMIN : public MAP_BASE{
+public:
 void bfs_sup_turnmin(){
 	int dx[8]={-1,1,0,0,-1,-1,1,1};
 	int dy[8]={0,0,-1,1,-1,1,-1,1};
 	
-	MAP_BASE map1;
-	std::vector<std::string> tu=map1.print_map();
+	std::vector<std::string> tu=map_in;
 
 	int x0=2,y0=2;
 	int n=tu.size();
 	int m=tu[0].size();
 	int xt=n-3,yt=m-3;
-
 	std::vector<std::vector<std::array<int,4>>> dist(n,std::vector<std::array<int,4>>(m));
 	std::vector<std::vector<std::array<std::array<int,3>,4>>> pre(n,std::vector<std::array<std::array<int,3>,4>>(m));
 	std::deque<std::array<int,3>> dq;
@@ -213,6 +202,7 @@ void bfs_sup_turnmin(){
         for (int j = 0; j < m; j++)
             dist[i][j].fill(1e9);
 	// [&]指代要引用的变量 ->表示输出形式为bool 感觉其实和函数挺像的
+	//这一段真是ai写的，但是感觉很好玩就拿过来用了
 	auto valid = [&](int x, int y) -> bool {//这个是lambda,可以在函数内部出现的函数
         for (int i = 0; i < 8; i++) {
             int nx = x + dx[i], ny = y + dy[i];
@@ -267,25 +257,22 @@ void bfs_sup_turnmin(){
 		int curx=xt,cury=yt;
 		int curd = minid;
 		do{
-            tu[curx][cury]='@';
-			for(int i=0;i<8;i++){
-				tu[curx+dx[i]][cury+dy[i]]='@' ;
-			}
+            tu[curx][cury]='C';
 			auto p=pre[curx][cury][curd];//一定要先提取旧的值，然后再更新，不然会出现curx先更新后再更新cury导致错误
             curx = p[0];
 			cury = p[1];
 			curd = p[2];
         }while(!(curx==x0 &&cury == y0));//少一个最初的判断，直接暴力加上了
-		for(int i=0;i<8;i++){
-			tu[x0+dx[i]][y0+dy[i]]='@' ;
-		}
-		for(int i=0;i<n;i++){
-			std::cout<<tu[i]<<'\n';
-		}
+		tu[2][2]='C';
+		print(tu);
 	}
 }
+
+};
+
 int main(){
-	bfs_sup_turnmin();
+	BFS_SUP_TURNMIN ans;
+	ans.bfs_sup_turnmin();
 	return 0;
 
 }
