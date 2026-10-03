@@ -50,9 +50,9 @@ public:
 //其实不知道什么要放到private里面，但是感觉如果全public那就没意义了？（不知）
 class Target{
 public:
-    char check_t(Enemy e1,double &mini){
+    char check_t(Enemy e,double &mini){
         char t;
-        e1.check_dis(&mini,&t);
+        e.check_dis(&mini,&t);
         return t;
     }
     
